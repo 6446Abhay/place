@@ -75,18 +75,34 @@
                 const sheet = workbook.Sheets[sheetName];
                 const jsonData = XLSX.utils.sheet_to_json(sheet);
 
+                // Display the data in the HTML page
                 displayData(jsonData);
+            })
+            .catch(error => {
+                console.error("Error fetching or reading the Excel file:", error);
             });
 
         function displayData(data) {
             container.innerHTML = ""; // Clear previous content
 
-            data.forEach((item) => {
+            if (!data || data.length === 0) {
+                container.innerHTML = "<p>No data found in the Excel file.</p>";
+                return;
+            }
+
+            data.forEach((item, index) => {
+                // Check if all the necessary fields are available
+                if (!item['Name'] || !item['Place'] || !item['Image URL'] || !item['Post Available'] || !item['Contact Number']) {
+                    console.error(`Missing data in row ${index + 1}: ${JSON.stringify(item)}`);
+                    return; // Skip rows with missing data
+                }
+
+                // Create a new school card for each entry
                 const card = document.createElement("div");
                 card.className = "school-card";
 
                 card.innerHTML = `
-                    <img src="${item['Image URL']}" alt="${item['Name'] || 'School'}">
+                    <img src="${item['Image URL']}" alt="${item['Name'] || 'School'}" onerror="this.onerror=null;this.src='default-image.jpg'">
                     <div class="school-info">
                         <h3>${item['Name']}</h3>
                         <p><strong>Place:</strong> ${item['Place']}</p>
