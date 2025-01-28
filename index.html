@@ -63,50 +63,46 @@
     <h1>School Information</h1>
     <div class="container" id="school-container"></div>
 
-    <input type="file" id="upload" style="display: block; margin: 20px auto;">
-
     <script>
-        const upload = document.getElementById("upload");
         const container = document.getElementById("school-container");
 
-        upload.addEventListener("change", (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-
-            reader.onload = (e) => {
-                const data = new Uint8Array(e.target.result);
+        // Fetch the predefined Excel file from the server (or GitHub)
+        fetch("data.xlsx") // Ensure this file is hosted in the same directory as your HTML file
+            .then((response) => response.arrayBuffer())
+            .then((data) => {
                 const workbook = XLSX.read(data, { type: "array" });
                 const sheetName = workbook.SheetNames[0];
                 const sheet = workbook.Sheets[sheetName];
                 const jsonData = XLSX.utils.sheet_to_json(sheet);
 
-                console.log(jsonData); // Debugging: Check the data read from the file
-
+                // Display the data in the HTML page
                 displayData(jsonData);
-            };
-
-            reader.readAsArrayBuffer(file);
-        });
+            })
+            .catch(error => {
+                console.error("Error fetching or reading the Excel file:", error);
+            });
 
         function displayData(data) {
             container.innerHTML = ""; // Clear previous content
 
-            if (data.length === 0) {
+            if (!data || data.length === 0) {
                 container.innerHTML = "<p>No data found in the Excel file.</p>";
                 return;
             }
 
             data.forEach((item, index) => {
+                // Check if all the necessary fields are available
+                if (!item['Name'] || !item['Place'] || !item['Image URL'] || !item['Post Available'] || !item['Contact Number']) {
+                    console.error(`Missing data in row ${index + 1}: ${JSON.stringify(item)}`);
+                    return; // Skip rows with missing data
+                }
+
+                // Create a new school card for each entry
                 const card = document.createElement("div");
                 card.className = "school-card";
 
-                // Debugging: Ensure all data fields are correct
-                console.log(item);
-
                 card.innerHTML = `
-                    <img src="${item['Image URL']}" alt="${item['Name'] || 'School'}">
+                    <img src="${item['Image URL']}" alt="${item['Name'] || 'School'}" onerror="this.onerror=null;this.src='default-image.jpg'">
                     <div class="school-info">
                         <h3>${item['Name']}</h3>
                         <p><strong>Place:</strong> ${item['Place']}</p>
