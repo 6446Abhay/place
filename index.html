@@ -63,30 +63,20 @@
     <h1>School Information</h1>
     <div class="container" id="school-container"></div>
 
-    <input type="file" id="upload" style="display: block; margin: 20px auto;">
-
     <script>
-        const upload = document.getElementById("upload");
         const container = document.getElementById("school-container");
 
-        upload.addEventListener("change", (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-
-            reader.onload = (e) => {
-                const data = new Uint8Array(e.target.result);
+        // Fetch the predefined Excel file from the server (or GitHub)
+        fetch("data.xlsx") // Ensure this file is hosted in the same directory as your HTML file
+            .then((response) => response.arrayBuffer())
+            .then((data) => {
                 const workbook = XLSX.read(data, { type: "array" });
                 const sheetName = workbook.SheetNames[0];
                 const sheet = workbook.Sheets[sheetName];
                 const jsonData = XLSX.utils.sheet_to_json(sheet);
 
                 displayData(jsonData);
-            };
-
-            reader.readAsArrayBuffer(file);
-        });
+            });
 
         function displayData(data) {
             container.innerHTML = ""; // Clear previous content
